@@ -1,0 +1,3 @@
+/node_modules
+/file_storage/**
+!/file_storage/.gitkeep
