@@ -1,15 +1,14 @@
 
-import { exit } from "process";
 import fs from "fs";
-import CrawlerMenu from "./src/CrawlerMenu.js";
-import CrawlerProduct from "./src/CrawlerProduct.js";
-import ScrapProduct from "./src/ScrapProduct.js";
+import CrawlerMenu from "./Crawler/CrawlerMenu.js";
+import CrawlerProduct from "./Crawler/CrawlerProduct.js";
+import ScrapProduct from "./Crawler/ScrapProduct.js";
 
-const save_file	= './file_storage/data.json';
+const save_file	= '../file_storage/data.json';
 const url		= 'https://www.arbell.com.ar'; // URL we're scraping
-const menus		= await CrawlerMenu(url);
 
-const linksAllProducts	= async (only_one=false) => new Promise((rs,rj)=>{
+const linksAllProducts	= async (only_one=false) => {//new Promise((rs,rj)=>{
+	let menus			= await CrawlerMenu(url);
 	var store_productos	= [];
 
 	var pending_loops	= 0;
@@ -25,7 +24,7 @@ const linksAllProducts	= async (only_one=false) => new Promise((rs,rj)=>{
 				continue;
 			}
 			pending_loops++;
-			(async()=>{
+			// (async()=>{
 				/** @returns Array[{link:string, descript:string}] */
 				try {
 					let productos	= await CrawlerProduct(url+termino.url);
@@ -46,35 +45,38 @@ const linksAllProducts	= async (only_one=false) => new Promise((rs,rj)=>{
 				}
 				resolve_loops++;
 				if(pending_loops==resolve_loops){
-					rs(store_productos);
+					// rs(store_productos);
+					return store_productos;
 				}
-			})();
+			// })();
 			if(only_one	== true){
 				break_loop	= true;
 			}
 		}
 	}
-});
-let productos = await linksAllProducts();
-
-
-// exit(); // Hasta aca, consegui todos los links de todos los productos
-
-
-var productos_completos	= [];
-var prod_local_id		= 0;
-for(let producto of productos){
-	let _prod	= await ScrapProduct(url, producto, prod_local_id);
-	productos_completos.push(_prod);
-	prod_local_id++;
 }
+// );
 
-// let _prod	= await ScrapProduct(url, productos[0]);
-// productos_completos.push(_prod);
-// console.log(productos_completos);
+main (async ()=>{
+	let productos = await linksAllProducts();
 
 
-(()=>{
+	// exit(); // Hasta aca, consegui todos los links de todos los productos
+
+
+	var productos_completos	= [];
+	var prod_local_id		= 0;
+	for(let producto of productos){
+		let _prod	= await ScrapProduct(url, producto, prod_local_id);
+		productos_completos.push(_prod);
+		prod_local_id++;
+	}
+
+	// let _prod	= await ScrapProduct(url, productos[0]);
+	// productos_completos.push(_prod);
+	// console.log(productos_completos);
+
+
 	try {
 		fs.writeFileSync(save_file, JSON.stringify(productos_completos), 'utf-8');
 	} catch (err) {
