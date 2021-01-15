@@ -1,13 +1,25 @@
 
 import fs from "fs";
+import { join } from "path";
 import CrawlerMenu from "./Crawler/CrawlerMenu.js";
 import CrawlerProduct from "./Crawler/CrawlerProduct.js";
 import ScrapProduct from "./Crawler/ScrapProduct.js";
 
+const store_path	= process.argv[2] || null;
+switch (false) {
+	case store_path:
+		throw new Error('Debe pasar como argumento la ruta donde se hubican las imagenes de los productos.');
+		break;
+	case fs.existsSync(store_path):
+		throw new Error(`El directorio ${store_path} no existe.`);
+		break;
+}
+
 const save_file	= '../file_storage/data.json';
 const url		= 'https://www.arbell.com.ar'; // URL we're scraping
 
-const linksAllProducts	= async (only_one=false) => {//new Promise((rs,rj)=>{
+/** @returns Array[{link:String, descripcion:String, categoria: String, termino: String}] */
+const linksAllProducts	= async (only_one) => {//new Promise((rs,rj)=>{
 	let menus			= await CrawlerMenu(url);
 	var store_productos	= [];
 
@@ -24,45 +36,40 @@ const linksAllProducts	= async (only_one=false) => {//new Promise((rs,rj)=>{
 				continue;
 			}
 			pending_loops++;
-			// (async()=>{
-				/** @returns Array[{link:string, descript:string}] */
-				try {
-					let productos	= await CrawlerProduct(url+termino.url);
-					productos.forEach((prod) => {
-						store_productos.push({
-							link: prod.link,
-							descripcion: prod.descript,
-							categoria: menu.name,
-							termino: termino.name,
-						});
-					})
-				}catch(e){
-					console.log(e);
-				}
 
-				if(only_one	== true){
-					break_loop	= true;
-				}
-				resolve_loops++;
-				if(pending_loops==resolve_loops){
-					// rs(store_productos);
-					return store_productos;
-				}
-			// })();
+			try {
+				let productos	= await CrawlerProduct(url+termino.url);
+				productos.forEach((prod) => {
+					store_productos.push({
+						link: prod.link,
+						descripcion: prod.descript,
+						categoria: menu.name,
+						termino: termino.name,
+					});
+				})
+			}catch(e){
+				console.log(e);
+			}
+
+			if(only_one	== true){
+				break_loop	= true;
+			}
+			resolve_loops++;
+			if(pending_loops==resolve_loops){
+				return store_productos;
+			}
 			if(only_one	== true){
 				break_loop	= true;
 			}
 		}
 	}
 }
-// );
 
-main (async ()=>{
-	let productos = await linksAllProducts();
-
-
-	// exit(); // Hasta aca, consegui todos los links de todos los productos
-
+export default async (only_one)=>{
+	console.log('Inicio - Obtener Datos');
+	
+	let productos = await linksAllProducts(only_one);
+	console.log('Todos los productos obtenidos');
 
 	var productos_completos	= [];
 	var prod_local_id		= 0;
@@ -72,14 +79,11 @@ main (async ()=>{
 		prod_local_id++;
 	}
 
-	// let _prod	= await ScrapProduct(url, productos[0]);
-	// productos_completos.push(_prod);
-	// console.log(productos_completos);
-
-
 	try {
-		fs.writeFileSync(save_file, JSON.stringify(productos_completos), 'utf-8');
+		fs.writeFileSync(join(store_path, 'data.json'), JSON.stringify(productos_completos), 'utf-8');
 	} catch (err) {
 		console.error(err)
 	}
-})();
+	
+	console.log('Fin - Obtener Datos');
+}

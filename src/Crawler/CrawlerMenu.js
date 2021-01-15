@@ -52,5 +52,7 @@ export default async (url)	=> {
 		});
 		return itemsMenu;
 	})
-	.catch(()=>[]);
+	.catch((e)=>{
+		throw new Error(e);
+	});
 }

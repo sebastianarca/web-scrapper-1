@@ -2,19 +2,16 @@
   "name": "arbel-scraper",
   "version": "1.0.0",
   "description": "",
-  "bin": "./lib/main_process_data.js",
+  "bin": "./lib/main.js",
   "scripts": {
     "build": "babel src -d lib",
-    "make": "pkg --out-path ./bin  package.json"
+    "make": "pkg -o ./bin/main.bin  package.json"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "pkg": {
-    "assets": [
-      "file_storage/**/*"
-    ],
     "targets": [
       "node14-alpine-x64"
     ]
